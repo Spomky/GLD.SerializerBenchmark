@@ -71,6 +71,23 @@ _DUP_PARAGRAPH = (
     "the behavior is unpredictable across implementations."
 )
 
+# cbor-wg bad.edn carries one flag for the whole file ("fail": true) and no
+# requirement levels, so everything in it imports as MUST NOT / reject. All of
+# its cases are ill-formed except this one: RFC 8949 §3 calls a text string
+# holding an invalid UTF-8 sequence "well-formed but invalid", §5.2 uses this
+# very item (0x62c0ae) as its example of that class, and §5.3.1 leaves the
+# check to the decoder. Score it implementation-defined.
+_CBOR_INVALID_UTF8_DESCRIPTIONS = frozenset({"utf8: invalid utf8"})
+
+_CBOR_INVALID_UTF8_CITE = (
+    "5.3.1",
+    "Basic validity",
+    "https://www.rfc-editor.org/rfc/rfc8949#section-5.3.1",
+    "A decoder might or might not want to verify that the sequence of bytes in "
+    "a UTF-8 string (major type 3) is actually valid UTF-8 and react "
+    "appropriately.",
+)
+
 
 def _json_topic(name: str) -> str:
     n = name.lower()
@@ -590,21 +607,30 @@ def import_cbor() -> None:
         out = []
         for i, m in enumerate(_EDN_TEST.finditer(text), 1):
             hx = re.sub(r"\s+", "", m.group("hex"))
-            out.append(
-                {
-                    "id": f"cbor-wg-{path.stem}-{i}",
-                    "title": m.group("desc"),
-                    "section": "3",
-                    "section_title": "CBOR data items",
-                    "section_url": "https://www.rfc-editor.org/rfc/rfc8949#section-3",
-                    "paragraph": "cbor-wg/cbor-test-vectors (BSD-2-Clause) for RFC 8949 well-formedness.",
-                    "requirement": req,
-                    "expect": expect,
-                    "input": hx,
-                    "input_encoding": "hex",
-                    "notes": f"Vendored from cbor-wg/cbor-test-vectors tests/rfc8949/{path.name}.",
-                }
-            )
+            desc = m.group("desc")
+            case = {
+                "id": f"cbor-wg-{path.stem}-{i}",
+                "title": desc,
+                "section": "3",
+                "section_title": "CBOR data items",
+                "section_url": "https://www.rfc-editor.org/rfc/rfc8949#section-3",
+                "paragraph": "cbor-wg/cbor-test-vectors (BSD-2-Clause) for RFC 8949 well-formedness.",
+                "requirement": req,
+                "expect": expect,
+                "input": hx,
+                "input_encoding": "hex",
+                "notes": f"Vendored from cbor-wg/cbor-test-vectors tests/rfc8949/{path.name}.",
+            }
+            if str(desc) in _CBOR_INVALID_UTF8_DESCRIPTIONS:
+                sec, title, url, para = _CBOR_INVALID_UTF8_CITE
+                case["section"] = sec
+                case["section_title"] = title
+                case["section_url"] = url
+                case["paragraph"] = para
+                case["requirement"] = "MAY"
+                case["expect"] = "any"
+                case["notes"] += " Well-formed but invalid (RFC 8949 §5.2); the UTF-8 check is left to the decoder."
+            out.append(case)
         return out
 
     good = from_edn(base / "good.edn", "accept", "MUST")

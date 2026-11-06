@@ -1426,15 +1426,15 @@
     {
       "id": "cbor-wg-bad-22",
       "title": "utf8: invalid utf8",
-      "section": "3",
-      "section_title": "CBOR data items",
-      "section_url": "https://www.rfc-editor.org/rfc/rfc8949#section-3",
-      "paragraph": "cbor-wg/cbor-test-vectors (BSD-2-Clause) for RFC 8949 well-formedness.",
-      "requirement": "MUST NOT",
-      "expect": "reject",
+      "section": "5.3.1",
+      "section_title": "Basic validity",
+      "section_url": "https://www.rfc-editor.org/rfc/rfc8949#section-5.3.1",
+      "paragraph": "A decoder might or might not want to verify that the sequence of bytes in a UTF-8 string (major type 3) is actually valid UTF-8 and react appropriately.",
+      "requirement": "MAY",
+      "expect": "any",
       "input": "62c0ae",
       "input_encoding": "hex",
-      "notes": "Vendored from cbor-wg/cbor-test-vectors tests/rfc8949/bad.edn."
+      "notes": "Vendored from cbor-wg/cbor-test-vectors tests/rfc8949/bad.edn. Well-formed but invalid (RFC 8949 \u00a75.2); the UTF-8 check is left to the decoder."
     },
     {
       "id": "cbor-wg-bad-23",
